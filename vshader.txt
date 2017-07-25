@@ -1,0 +1,68 @@
+#version 330
+
+uniform mat4 camera;
+uniform mat4 model;
+
+layout (location=0) in vec3 inPosition;
+layout (location=1) in vec3 inColor;
+layout (location=2) in vec3 inNormal;
+
+layout (location=3) in vec3  inKa;
+layout (location=4) in vec3  inKd;
+layout (location=5) in vec3  inKs;
+layout (location=6) in float inNs;
+
+out vMaterial
+{
+   vec3  Ka;
+   vec3  Kd;
+   vec3  Ks;
+   float Ns;
+} vmaterial;
+
+out vec3 fragPos;
+out vec3 fragNormal;
+
+void main() {
+    // Pass some variables to the fragment shader
+    fragPos    = vec3(model * vec4(inPosition, 1.0));
+    fragNormal = normalize(transpose(inverse(mat3(model))) * inNormal);
+
+    // set material properties here for test purpose - TODO: remove for final usage
+    /*
+    vmaterial.Ka = inColor;
+    vmaterial.Kd = inColor;
+    vmaterial.Ks = vec3(1.0, 1.0, 1.0);
+    vmaterial.Ns = 128.0;
+    */
+
+    vmaterial.Ka = inKa;
+    vmaterial.Kd = inKd;
+    vmaterial.Ks = inKs;
+    vmaterial.Ns = inNs;    
+
+    // Apply all matrix transformations to vertice
+    gl_Position = camera * vec4(fragPos, 1.0);
+}
+
+/*
+#version 330 core
+
+uniform mat4 mv_matrix;
+uniform mat4 proj_matrix;
+
+uniform mat4 camera;
+uniform mat4 model;
+
+
+layout (location=0) in vec4 inPosition;
+
+void main(void)
+{
+    //gl_Position =  proj_matrix * mv_matrix * inPosition;
+    gl_Position =  camera * model * inPosition;
+    //gl_Position = inPosition;
+}
+
+*/
+

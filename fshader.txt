@@ -1,0 +1,70 @@
+#version 330
+
+uniform mat4 model;
+
+/*
+uniform struct Material
+{
+   vec3  Ka;
+   vec3  Kd;
+   vec3  Ks;
+   float Ns;
+} fmaterial;
+*/
+
+in vMaterial
+{
+   vec3  Ka;
+   vec3  Kd;
+   vec3  Ks;
+   float Ns;
+} fmaterial;
+
+uniform vec3 cameraPosition;
+
+vec3  lightPosition  = vec3(0.0, 0.0, 1000.0);
+
+in vec3 fragPos;
+in vec3 fragColor;
+in vec3 fragNormal;
+
+out vec4 finalColor;
+
+void main() {
+    float diffuseCoefficient;
+    float specularCoefficient = 0.0;
+    vec3  normal = fragNormal;
+
+    if (!gl_FrontFacing) normal = -normal;
+    vec4 surfaceColor = vec4(fragColor, 1.0);
+    vec3 surfaceToLight = normalize(lightPosition - fragPos);
+    vec3 surfaceToCamera = normalize(cameraPosition - fragPos);
+    float dotNL = dot(normal, surfaceToLight);
+
+    //ambient
+    vec3 ambient = fmaterial.Ka * 0.15;
+
+    //diffuse
+    diffuseCoefficient = max(0.0, dotNL);
+    vec3 diffuse = diffuseCoefficient * fmaterial.Kd;
+
+    //specular
+    if (diffuseCoefficient > 0.0)
+    {
+        specularCoefficient = pow(max(0.0, dot(surfaceToCamera, reflect(-surfaceToLight, normal))), fmaterial.Ns);
+    }
+    vec3 specular = specularCoefficient * fmaterial.Ks;
+
+    finalColor = vec4(ambient + diffuse + specular, 1.0);
+}
+
+/*
+#version 330 core
+
+out vec4 outColor;
+
+void main(void)
+{    
+    outColor = vec4 (0.7, 0.7, 1.0, 1.0);
+}
+*/
