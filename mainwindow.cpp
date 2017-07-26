@@ -157,3 +157,8 @@ void MainWindow::on_actionAbout_triggered()
     uiAboutDlg.setupUi(&d);
     d.exec();
 }
+
+void MainWindow::on_goButton_clicked()
+{
+    MyGlWindow->displayObj();
+}

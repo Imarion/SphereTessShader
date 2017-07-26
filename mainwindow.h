@@ -30,6 +30,8 @@ private slots:
     void on_autoRotateRadioButton_clicked();
     void on_actionAbout_triggered();
 
+    void on_goButton_clicked();
+
 private:
     Ui::MainWindow *uiMainWindow;
     //Ui::About      *uiAboutDlg;

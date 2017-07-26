@@ -6,10 +6,12 @@
 #include <QString>
 
 #include <QOpenGLContext>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLShader>
+
+#include "Icosahedron.h"
 
 //class MyWindow : public QWindow, protected QOpenGLFunctions_4_3_Core
 class GlWindow : public QWindow, protected QOpenGLFunctions
@@ -36,9 +38,12 @@ public:
 private slots:
     void render();
 
-private:    
-    void   initialize();
+private:
     void   modCurTime();
+
+    void   initialize();
+    void   CreateVertexBuffer();
+    void   initMatrices();
     void   initShaders();
 
 protected:
@@ -47,7 +52,7 @@ protected:
 private:
     // the opengl framework
     QOpenGLContext            *mContext;
-    QOpenGLFunctions_3_3_Core *mFuncs;
+    QOpenGLFunctions_4_3_Core *mFuncs;
     QOpenGLShaderProgram      *mProgram;
 
     QTimer *mRepaintTimer;
@@ -58,12 +63,15 @@ private:
     bool   mUpdateSize;
 
     // opengl display data
-    GLuint mVAO; // Vertex array object
+    GLuint mVAOIcosahedron; // Vertex array object
 
     QMatrix4x4 proj_matrix;
+    QMatrix4x4 ViewMatrix;
     //GLint mv_location, proj_location;
     GLint model_location, camera_location, campos_location;
     GLint ka_location, kd_location, ks_location, ns_location;
+
+    Icosahedron *mIcosahedron;
 
     GLfloat  *mObjVertices;
     GLfloat  *mObjNormals;

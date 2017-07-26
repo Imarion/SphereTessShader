@@ -319,6 +319,19 @@
      </attribute>
     </widget>
    </widget>
+   <widget class="QPushButton" name="goButton">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>210</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Go</string>
+    </property>
+   </widget>
    <zorder>rotateFrame</zorder>
    <zorder>scaleFrame</zorder>
    <zorder>label_2</zorder>
@@ -333,6 +346,7 @@
    <zorder>scaleStepLineEdit</zorder>
    <zorder>label_5</zorder>
    <zorder>autoRotateRadioButton</zorder>
+   <zorder>goButton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

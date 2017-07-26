@@ -15,7 +15,7 @@ using namespace std;
 
 GlWindow::~GlWindow()
 {
-    mFuncs->glDeleteVertexArrays(1, &mVAO);
+    mFuncs->glDeleteVertexArrays(1, &mVAOIcosahedron);
     if (mProgram)      delete   mProgram;
     if (mContext)      delete   mContext;
     if (mRepaintTimer) delete   mRepaintTimer;
@@ -57,7 +57,7 @@ GlWindow::GlWindow() : currentTimeMs(0), currentTimeS(0)
 
     mContext->makeCurrent( this );
 
-    mFuncs = mContext->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    mFuncs = mContext->versionFunctions<QOpenGLFunctions_4_3_Core>();
     if ( !mFuncs )
     {
         qWarning( "Could not obtain OpenGL versions object" );
@@ -73,7 +73,7 @@ GlWindow::GlWindow() : currentTimeMs(0), currentTimeS(0)
 
     mRepaintTimer = new QTimer(this);
     connect(mRepaintTimer, &QTimer::timeout, this, &GlWindow::render);
-    mRepaintTimer->start(20);
+    //mRepaintTimer->start(20);
 
     mElapsedTimer = new QTimer(this);
     connect(mElapsedTimer, &QTimer::timeout, this, &GlWindow::modCurTime);
@@ -194,34 +194,47 @@ void GlWindow::keyPressEvent(QKeyEvent *keyEvent)
 
 void GlWindow::initialize()
 {
+    CreateVertexBuffer();
     initShaders();
-    //mv_location       = glGetUniformLocation(mProgram->programId(), "mv_matrix");
-    //proj_location     = glGetUniformLocation(mProgram->programId(), "proj_matrix");
-    model_location    = glGetUniformLocation(mProgram->programId(), "model");
-    camera_location   = glGetUniformLocation(mProgram->programId(), "camera"); // camera-lookat
-    campos_location   = glGetUniformLocation(mProgram->programId(), "cameraPosition"); // camera position
-    ka_location       = glGetUniformLocation(mProgram->programId(), "material.Ka");
-    kd_location       = glGetUniformLocation(mProgram->programId(), "material.Kd");
-    ks_location       = glGetUniformLocation(mProgram->programId(), "material.Ks");
-    ns_location       = glGetUniformLocation(mProgram->programId(), "material.Ns");
-
-    mFuncs->glGenVertexArrays(1, &mVAO);
-    mFuncs->glBindVertexArray(mVAO);
-
-    glGenBuffers(1, &mVerticesBuffer);
-    glGenBuffers(1, &mNormalsBuffer);
-    glGenBuffers(1, &mColorsBuffer);
-
-    glGenBuffers(1, &mIndicesBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-
-//    glEnable(GL_CULL_FACE);
-//    glFrontFace(GL_CW);
+    //initMatrices();
 
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_LEQUAL);
+}
 
+void GlWindow::CreateVertexBuffer()
+{
+    // *** Icosahedron
+    mFuncs->glGenVertexArrays(1, &mVAOIcosahedron);
+    mFuncs->glBindVertexArray(mVAOIcosahedron);
+
+    mIcosahedron = new Icosahedron();
+
+    // Create and populate the buffer objects
+    unsigned int IcosahedronHandles[2];
+    glGenBuffers(2, IcosahedronHandles);
+
+    glBindBuffer(GL_ARRAY_BUFFER, IcosahedronHandles[0]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mIcosahedron->getnVerts()) * sizeof(float), mIcosahedron->getv(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IcosahedronHandles[1]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * mIcosahedron->getnFaces() * sizeof(unsigned int), mIcosahedron->getel(), GL_STATIC_DRAW);
+
+    // Setup the VAO
+    // Vertex positions
+    mFuncs->glBindVertexBuffer(0, IcosahedronHandles[0], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(0, 0);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IcosahedronHandles[1]);
+
+    mFuncs->glBindVertexArray(0);
+}
+
+void GlWindow::initMatrices()
+{
+    ViewMatrix.lookAt(QVector3D(1.0f, 1.25f, 1.25f), QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 1.0f, 0.0f));
 }
 
 void GlWindow::resizeEvent(QResizeEvent *)
