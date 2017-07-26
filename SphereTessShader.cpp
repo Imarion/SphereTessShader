@@ -42,7 +42,7 @@ GlWindow::GlWindow() : currentTimeMs(0), currentTimeS(0)
 
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
-    format.setMajorVersion(3);
+    format.setMajorVersion(4);
     format.setMinorVersion(3);
     format.setSamples(4);
     format.setProfile(QSurfaceFormat::CoreProfile);
@@ -94,51 +94,7 @@ void GlWindow::setObjFile(QString filename)
 
 void GlWindow::displayObj()
 {
-#if 0
-    {
-        mRepaintTimer->stop();
-        convertWFOObjectToGl();
-
-        setAutoScale();
-
-        /* Cette partie en commentaire fonctionne bien en indexed draw */
-        /*
-        glBufferData(GL_ARRAY_BUFFER, mWaveFrontObject.getInstance().getNumVertices() * WaveFrontObject::getNumDataPerVertex() * sizeof(GLfloat), mObjVertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(0);
-
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mWaveFrontObject.getInstance().getNumIndices() * sizeof(GLint), mObjIndices, GL_STATIC_DRAW);
-        */
-
-        glBindBuffer(GL_ARRAY_BUFFER, mVerticesBuffer);
-        glBufferData(GL_ARRAY_BUFFER, mWaveFrontObject.getInstance().getNumIndices() * WaveFrontObject::getNumDataPerVertex() * sizeof(GLfloat), mObjVertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, mColorsBuffer);
-        glBufferData(GL_ARRAY_BUFFER, mWaveFrontObject.getInstance().getNumIndices() * MaterialData::getRawDataSize(), mObjMaterials, GL_STATIC_DRAW);
-        for (int i=0; i<3; i++) // Ka=loc 3, Kd=loc 4, Ks=loc 5
-        {
-            glVertexAttribPointer (i+3, 3, GL_FLOAT, GL_FALSE, MaterialData::getRawDataSize(), (GLvoid *)(i*3*sizeof(GLfloat)));
-            glEnableVertexAttribArray(i+3);
-        }
-
-        // Ns: loc = 6        
-        glVertexAttribPointer (6, 1, GL_FLOAT, GL_FALSE, MaterialData::getRawDataSize(), (GLvoid *)(9*sizeof(GLfloat)));
-        glEnableVertexAttribArray(6);
-
-        glBindBuffer(GL_ARRAY_BUFFER, mNormalsBuffer);
-        glBufferData(GL_ARRAY_BUFFER, mWaveFrontObject.getInstance().getNumIndices() * Normal::getNumData() * sizeof(GLfloat), mObjNormals, GL_STATIC_DRAW);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(2);
-
-        mRepaintTimer->start(20);
-    }
-    else
-    {
-        qDebug() << "error loading " << mObjFileName;
-    }
-#endif
+    mRepaintTimer->start(20);
 }
 
 void GlWindow::keyPressEvent(QKeyEvent *keyEvent)
@@ -218,7 +174,7 @@ void GlWindow::CreateVertexBuffer()
     glBufferData(GL_ARRAY_BUFFER, (3 * mIcosahedron->getnVerts()) * sizeof(float), mIcosahedron->getv(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IcosahedronHandles[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * mIcosahedron->getnFaces() * sizeof(unsigned int), mIcosahedron->getel(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * mIcosahedron->getnFaces() * sizeof(unsigned int), mIcosahedron->getel(), GL_STATIC_DRAW);
 
     // Setup the VAO
     // Vertex positions
@@ -261,51 +217,19 @@ void GlWindow::render()
         mUpdateSize = false;
     }
 
-    //static const GLfloat backCol[] = { 0.6f, 0.4f, 0.1f, 1.0f }; // orange
-    static const GLfloat backCol[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    mFuncs->glClearBufferfv(GL_COLOR, 0, backCol);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    static const GLfloat one = 1.0f;
-    mFuncs->glClearBufferfv(GL_DEPTH, 0, &one);
+    mFuncs->glBindVertexArray(mVAOIcosahedron);
 
+    glEnableVertexAttribArray(0);
     mProgram->bind();
     {
-        QMatrix4x4 modelViewMatrix;
-        QMatrix4x4 cameraMatrix;
-        QVector3D  cameraPos(0.0f, 0.0f, 4.0f);
-
-        cameraMatrix.perspective(50.0f, this->width()/this->height(), 0.1f, 1000.0f);        
-        cameraMatrix.lookAt(cameraPos, QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 1.0f, 0.0f));
-        glUniformMatrix4fv(camera_location, 1, GL_FALSE, cameraMatrix.constData());
-        glUniform3f(campos_location, cameraPos.x(), cameraPos.y(), cameraPos.z());
-
-        //modelViewMatrix.translate(0.0f, 0.0f, -4.0f);
-        modelViewMatrix.translate(mTransX, mTransY, mTransZ);
-        if (mRotAuto)
-        {
-            modelViewMatrix.rotate((float)currentTimeS * -21.0f, 1.0f, 0.0f, 0.0f);
-            modelViewMatrix.rotate((float)currentTimeS * -45.0f, 0.0f, 1.0f, 0.0f);
-        }
-        else
-        {
-            modelViewMatrix.rotate(mRotX, 1.0f, 0.0f, 0.0f);
-            modelViewMatrix.rotate(mRotY, 0.0f, 1.0f, 0.0f);
-            modelViewMatrix.rotate(mRotZ, 0.0f, 0.0f, 1.0f);
-        }
-        modelViewMatrix.scale(mScaleX, mScaleY, mScaleZ);
-
-        glUniformMatrix4fv(model_location, 1, GL_FALSE, modelViewMatrix.constData());
-
-        /* Cette partie en commentaire fonctionne bien en indexed draw */
-        /*
-        glDrawElements(GL_TRIANGLES, mWaveFrontObject.getInstance().getNumIndices(), GL_UNSIGNED_INT, (GLvoid *)(sizeof(GLuint)*0));
-        */        
-
-        //glDrawArrays(GL_TRIANGLE_FAN, 0, mWaveFrontObject.getInstance().getNumIndices());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 12);
+        glDrawElements(GL_TRIANGLES, 3 * mIcosahedron->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+        glDisableVertexAttribArray(0);
     }
+    mProgram->release();    
 
-    mProgram->release();
     mContext->swapBuffers(this);
 }
 

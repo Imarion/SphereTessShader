@@ -158,7 +158,7 @@ void MainWindow::on_actionAbout_triggered()
     d.exec();
 }
 
-void MainWindow::on_goButton_clicked()
+void MainWindow::on_goButton_pressed()
 {
     MyGlWindow->displayObj();
 }
