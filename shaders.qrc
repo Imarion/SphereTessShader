@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file>vshader.txt</file>
         <file>fshader.txt</file>
+        <file>tcshader.txt</file>
+        <file>teshader.txt</file>
+        <file>gshader.txt</file>
     </qresource>
 </RCC>

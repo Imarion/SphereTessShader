@@ -225,7 +225,9 @@ void GlWindow::render()
     glEnableVertexAttribArray(0);
     mProgram->bind();
     {
-        glDrawElements(GL_TRIANGLES, 3 * mIcosahedron->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+        //glDrawElements(GL_TRIANGLES, 3 * mIcosahedron->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+        mFuncs->glPatchParameteri(GL_PATCH_VERTICES, 3);               // tell OpenGL that every patch has 16 verts
+        glDrawElements(GL_PATCHES, mIcosahedron->getnFaces(), GL_UNSIGNED_INT, 0);  // draw a bunch of patches
         glDisableVertexAttribArray(0);
     }
     mProgram->release();    
@@ -237,6 +239,9 @@ void GlWindow::initShaders()
 {
     QOpenGLShader vShader(QOpenGLShader::Vertex);
     QOpenGLShader fShader(QOpenGLShader::Fragment);
+    QOpenGLShader tcShader(QOpenGLShader::TessellationControl);
+    QOpenGLShader teShader(QOpenGLShader::TessellationEvaluation);
+    QOpenGLShader gShader(QOpenGLShader::Geometry);
 
     QFile vertShaderFile(":/vshader.txt");
     vertShaderFile.open(QIODevice::ReadOnly);
@@ -248,12 +253,34 @@ void GlWindow::initShaders()
     QByteArray fragShaderSource = fragShaderFile.readAll();
     fragShaderFile.close();
 
+    QFile tcShaderFile(":/tcshader.txt");
+    tcShaderFile.open(QIODevice::ReadOnly);
+    QByteArray tcShaderSource = tcShaderFile.readAll();
+    tcShaderFile.close();
+
+    QFile teShaderFile(":/teshader.txt");
+    teShaderFile.open(QIODevice::ReadOnly);
+    QByteArray teShaderSource = teShaderFile.readAll();
+    teShaderFile.close();
+
+    QFile gShaderFile(":/gshader.txt");
+    gShaderFile.open(QIODevice::ReadOnly);
+    QByteArray gShaderSource = gShaderFile.readAll();
+    gShaderFile.close();
+
     qDebug() << "vertex 1 compile: " << vShader.compileSourceCode(vertShaderSource);
     qDebug() << "frag   1 compile: " << fShader.compileSourceCode(fragShaderSource);
+    qDebug() << "tc     1 compile: " << tcShader.compileSourceCode(tcShaderSource);
+    qDebug() << "te     1 compile: " << teShader.compileSourceCode(teShaderSource);
+    qDebug() << "geom   1 compile: " << gShader.compileSourceCode(gShaderSource);
 
     mProgram = new (QOpenGLShaderProgram);
     mProgram->addShader(&vShader);    
     mProgram->addShader(&fShader);
+    mProgram->addShader(&tcShader);
+    mProgram->addShader(&teShader);
+    mProgram->addShader(&gShader);
+
     qDebug() << "shader link: " << mProgram->link();
 }
 

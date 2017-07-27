@@ -13,7 +13,11 @@ SOURCES += SphereTessShader.cpp main.cpp \
 
 OTHER_FILES += \
     vshader.txt \
-    fshader.txt
+    fshader.txt \
+    tcshader.txt \
+    teshader.txt \
+    gshader.txt
+
 
 RESOURCES += \
     shaders.qrc
@@ -22,3 +26,4 @@ FORMS += \
     mainwindow.ui \
     about.ui
 
+DISTFILES +=
